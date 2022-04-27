@@ -49,6 +49,20 @@ uint64_t* el32_ifstream::get_convert_in_buf() {
     return _convert_in_buf;
 }
 
+void el32_ifstream::convert_new_vertex(uint64_t const& max_index, uint64_t* const& new_ID_array, uint32_t const& src_row_ID,  uint32_t const& src_col_ID) {
+#pragma omp parallel for
+    for (uint64_t i = 0; i < (max_index >> 1); i++) {
+        _convert_in_buf[(i << 1)] = new_ID_array[((uint64_t)src_row_ID << GRID_SIZE) | _in_buf[(i << 1)]];
+        _convert_in_buf[(i << 1) + 1] = new_ID_array[((uint64_t)src_col_ID << GRID_SIZE) | _in_buf[(i << 1) + 1]];
+        
+        assert(_convert_in_buf[(i << 1)] != 0);
+        assert(_convert_in_buf[(i << 1) + 1] != 0);
+
+        _convert_in_buf[(i << 1)]--;
+        _convert_in_buf[(i << 1) + 1]--;
+    }
+}
+
 void el32_ifstream::memmove_in_buf(uint64_t const& dest, uint64_t const& src, uint64_t const& len) {
     memmove(_in_buf + dest, _in_buf + src, len);
 }
