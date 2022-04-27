@@ -141,6 +141,39 @@ void grid_to_oel32::_progress_shard(gstream::grid_format::gbid_t const& gbid) {
     }
 }
 
+void grid_to_oel32::_insert_progress_shard(shard_info& s_info) {
+    using namespace gstream;
+    using namespace grid_format;
+
+    sleaf_t const& sleaf = s_info.sleaf;
+
+    extent_load_info const& ld_info = _gs.ext_ld_info(sleaf.ext_info.extent_id);
+    _gs.load_extent(input_buf, ld_info);
+    
+    void* sparse_buf = malloc(sleaf.size_info.sparse_size);
+    
+    dense_block* dense_shard = static_cast<dense_block*>(ash::seek_pointer(input_buf, ld_info.data_offset));
+    dense_shard->dense_to_sparse(sleaf, sparse_buf);
+    sparse_block* shard = static_cast<sparse_block*>(sparse_buf);
+    
+    s_info.sparse_buf = shard;
+
+    _inprocess_shard.insert(s_info);
+    _src_vertex_idx[sleaf.unique_id] = 0;
+}
+
+void grid_to_oel32::_remove_progress_shard(std::set<grid_to_oel32::shard_info, grid_to_oel32::shard_info_col_cmp>::iterator const& iter) {
+    free((*iter).sparse_buf);
+    _src_vertex_idx.erase((*iter).sleaf.unique_id);
+    _inprocess_shard.erase(iter);
+}
+
+void grid_to_oel32::_clear() {
+    _candidate_shard.clear();
+    _inprocess_shard.clear();
+    _src_vertex_idx.clear();
+}
+
 void grid_to_oel32::_init_output_stream() {
     for (uint32_t i = 0; i < _col; i++) {
         _el_ofs[i].init_stream(el32_make_optimal_path(_output_path, _row_grid_ID, i));

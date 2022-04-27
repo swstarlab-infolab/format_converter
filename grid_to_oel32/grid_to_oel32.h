@@ -41,6 +41,9 @@ private:
 
     void _make_candidate_shard(gstream::grid_format::gbid_t const& gbid);
     void _progress_shard(gstream::grid_format::gbid_t const& gbid);
+    void _insert_progress_shard(shard_info& c_shard_info);
+    void _remove_progress_shard(std::set<grid_to_oel32::shard_info, grid_to_oel32::shard_info_col_cmp>::iterator const& iter);
+    void _clear();
     
     void _init_output_stream();
     void _close_output_stream();
