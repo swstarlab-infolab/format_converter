@@ -40,6 +40,7 @@ private:
     bool _open_grid_stream();
 
     void _make_candidate_shard(gstream::grid_format::gbid_t const& gbid);
+    void _progress_shard(gstream::grid_format::gbid_t const& gbid);
     
     void _init_output_stream();
     void _close_output_stream();

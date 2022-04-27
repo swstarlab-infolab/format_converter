@@ -99,6 +99,48 @@ void grid_to_oel32::_make_candidate_shard(gstream::grid_format::gbid_t const& gb
     sort(_candidate_shard.begin(), _candidate_shard.end(), shard_info_row_cmp());
 }
 
+void grid_to_oel32::_progress_shard(gstream::grid_format::gbid_t const& gbid) {
+    using namespace gstream;
+    using namespace grid_format;
+
+    uint32_t src_vertex = 0;
+    uint32_t c_shard_idx = 0;
+    
+    while (!(_inprocess_shard.empty() && c_shard_idx == _candidate_shard.size())) {
+        while (c_shard_idx < _candidate_shard.size() && _candidate_shard[c_shard_idx].sleaf.row_range.lo <= src_vertex) {
+            _insert_progress_shard(_candidate_shard[c_shard_idx++]);
+        }
+        
+        // get next shard row
+        uint32_t min_src_vertex = (1 << 24);
+        for (auto iter = _inprocess_shard.begin(); iter != _inprocess_shard.end();iter++) {
+            uint64_t u_id = (*iter).sleaf.unique_id;
+            sparse_block* shard = (*iter).sparse_buf;
+            min_src_vertex = std::min(min_src_vertex, shard->source_vertex(_src_vertex_idx[u_id]));
+        }
+
+        src_vertex = min_src_vertex;
+
+        for (auto iter = _inprocess_shard.begin(), nxt_iter = iter; iter != _inprocess_shard.end(); iter = nxt_iter) {
+            nxt_iter++;
+
+            uint64_t u_id = (*iter).sleaf.unique_id;
+            sparse_block* shard = (*iter).sparse_buf;
+            uint32_t num_lists = shard->num_lists();
+
+            if (src_vertex == shard->source_vertex(_src_vertex_idx[u_id])) {
+                sparse_block::adj_list_t adj = shard->adj_list(_src_vertex_idx[u_id]);        
+                for (uint32_t j = 0; j < adj.length; ++j) {
+                    laddr_t const dst_vertex = adj[j];
+                    _insert_edge(gbid, src_vertex, dst_vertex);
+                }
+                if(++_src_vertex_idx[u_id] == num_lists) 
+                    _remove_progress_shard(iter);
+            }
+        }
+    }
+}
+
 void grid_to_oel32::_init_output_stream() {
     for (uint32_t i = 0; i < _col; i++) {
         _el_ofs[i].init_stream(el32_make_optimal_path(_output_path, _row_grid_ID, i));
