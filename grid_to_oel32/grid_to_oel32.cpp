@@ -32,10 +32,6 @@ grid_to_oel32::~grid_to_oel32() {
 }
 
 bool grid_to_oel32::run() {
-    if (!_cfg.is_dense_format) {
-        printf("Not support sparse format yet.\n");
-        return false;
-    }
     if (!el32_check_output_directory(_output_path, _row)) {
         return false;
     }
