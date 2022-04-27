@@ -17,6 +17,7 @@ public:
     uint32_t* get_in_buf();
     uint64_t* get_convert_in_buf();
 
+    void convert_origin_vertex(uint64_t const& buffer_size, uint32_t const& src_row_ID,  uint32_t const& src_col_ID);
     void convert_new_vertex(uint64_t const& max_index, uint64_t* const& new_ID_map_v, uint32_t const& src_row_ID,  uint32_t const& src_col_ID);
     void memmove_in_buf(uint64_t const& dest, uint64_t const& src, uint64_t const& len);
 
