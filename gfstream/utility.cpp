@@ -33,8 +33,7 @@ bool el32_check_output_directory(std::string const& path, uint32_t row) {
     return true;
 }
 
-void el32_remove_empty_output_directory(std::string const& path, uint32_t row) {
-    namespace fs = ::boost::filesystem;
+void remove_empty_output_directory(std::string const& path, uint32_t row) {
     for (uint32_t i = 0; i < row; i++) {
         std::string sub_dir_path = el32_make_subdir_path(path, i);
         if (fs::is_empty(sub_dir_path)) {
