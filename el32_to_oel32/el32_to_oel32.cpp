@@ -81,6 +81,67 @@ uint64_t el32_to_oel32::get_total_edge() {
     return _total_edge;
 }
 
+uint64_t el32_to_oel32::_optimize(uint32_t* const& in_buf, uint64_t const& max_index, gstream::grid_format::gbid_t const& gbid, bool is_last_buf) {
+    using namespace gstream;
+    using namespace grid_format;
+    
+    e32_t* input_edges = reinterpret_cast<e32_t*>(in_buf);
+    uint64_t num_input_edges = max_index >> 1;
+    uint64_t num_process_edges = num_input_edges;
+
+    if (!is_last_buf) {
+        e32_t last_edge = input_edges[num_input_edges - 1];
+        for (uint64_t i = num_input_edges - 1; i >= 0; i--) {
+            if (input_edges[i].u == last_edge.u){
+                num_process_edges--;
+            }
+            else break;
+        }
+        // output buffer is small
+        assert(num_process_edges > 0);
+    }
+
+    uint64_t num_no_loops;
+    if (gbid.col == gbid.row) {
+    #if defined(GSTREAM_USE_CXX17_EXECUTION_POLICY)
+        e32_t* last = std::partition(std::execution::par_unseq, input_edges, input_edges + num_process_edges, e32_is_not_diagonal);
+    #elif defined(GSTREAM_USE_LIBSTDCXX_PARALLEL_MODE)
+        e32_t* last = __gnu_parallel::partition(input_edges, input_edges + num_process_edges, e32_is_not_diagonal);
+    #else
+        e32_t* last = std::partition(input_edges, input_edges + num_process_edges, e32_is_not_diagonal);
+    #endif
+        num_no_loops = static_cast<uint64_t>(reinterpret_cast<char const*>(last) - reinterpret_cast<char const*>(input_edges)) / sizeof(e32_t*);
+    }
+    else {
+        num_no_loops = num_process_edges;
+    }
+
+    /* Sort */
+    boost::sort::block_indirect_sort(input_edges, input_edges + num_no_loops, e32_compare, std::thread::hardware_concurrency());
+
+    /* Deduplication */
+    uint64_t num_duplicates, num_uniques;
+    {
+    #if defined(GSTREAM_USE_CXX17_EXECUTION_POLICY)
+        e32_t* last = std::unique_copy(std::execution::par_unseq, input_edges, input_edges + num_no_loops, _unique_edges_buf, e32_equal);
+    #elif defined(GSTREAM_USE_LIBSTDCXX_PARALLEL_MODE)
+        e32_t* last = __gnu_parallel::unique_copy(input_edges, input_edges + num_no_loops, _unique_edges_buf, e32_equal);
+    #else
+        e32_t* last = std::unique_copy(input_edges, input_edges + num_no_loops, _unique_edges_buf.unique_edges, e32_equal);
+    #endif
+        num_uniques = static_cast<uint64_t>(reinterpret_cast<char const*>(last) - reinterpret_cast<char const*>(_unique_edges_buf)) / sizeof(e32_t*);
+        assert(num_uniques <= num_no_loops);
+        num_duplicates = num_no_loops - num_uniques;
+        assert(num_duplicates < num_no_loops);
+    }
+
+    for (uint64_t i = 0; i < num_uniques; i++) {
+        _insert_edge(gbid, _unique_edges_buf[i].u, _unique_edges_buf[i].v);
+    }
+
+    return (num_input_edges - num_process_edges) << 3;
+}
+
 void el32_to_oel32::_init_output_stream() {
     for (uint32_t i = 0; i < _col; i++) {
         _el_ofs[i].init_stream(el32_make_optimal_path(_output_path, _row_grid_ID, i));
