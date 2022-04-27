@@ -25,4 +25,15 @@ public:
 
 private:
     config_t _cfg;
+    std::string _input_path, _output_path;
+    uint32_t _row, _col;
+    uint32_t _row_grid_ID;
+    el32_ofstream* _el_ofs;
+    gstream::grid_format::e32_t* _unique_edges_buf;
+    uint64_t _total_edge;
+
+    uint64_t _optimize(uint32_t* const& in_buf, uint64_t const& max_index, gstream::grid_format::gbid_t const& gbid, bool is_last_buf);
+
+    void _init_output_stream();
+    void _close_output_stream();
 };
