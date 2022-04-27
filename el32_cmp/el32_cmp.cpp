@@ -14,6 +14,47 @@ el32_cmp::el32_cmp(config_t const& cfg) {
 
 el32_cmp::~el32_cmp() {}
 
+void el32_cmp::read_stream1(uint64_t const& buffer_size) {
+    _ifs1.read(reinterpret_cast<char*>(_in_buf1), buffer_size);
+    uint64_t const bytes_transferred = _ifs1.gcount();
+    assert(bytes_transferred == buffer_size);
+}
+
+void el32_cmp::read_stream2(uint64_t const& buffer_size) {
+    _ifs2.read(reinterpret_cast<char*>(_in_buf2), buffer_size);
+    uint64_t const bytes_transferred = _ifs2.gcount();
+    assert(bytes_transferred == buffer_size);
+}
+
+void el32_cmp::_compare_file(std::string const& path1, std::string const& path2) {
+    uint64_t file_size1 = fs::file_size(path1);
+    uint64_t file_size2 = fs::file_size(path2);
+    assert(file_size1 == file_size2);
+    
+    _ifs1.open(path1, std::ios::in | std::ios::binary);
+    assert(_ifs1.is_open());
+
+    _ifs2.open(path2, std::ios::in | std::ios::binary);
+    assert(_ifs2.is_open());
+
+    uint64_t remain_size = file_size1;
+
+    while(remain_size){
+        uint64_t const buffer_size = std::min(BUF_SIZE, remain_size);
+
+        read_stream1(buffer_size);
+        read_stream2(buffer_size);
+
+        assert(memcmp(_in_buf1, _in_buf2, buffer_size) == 0);
+
+        remain_size -= buffer_size;
+    }
+
+    _ifs1.close(); _ifs1.clear();
+    _ifs2.close(); _ifs2.clear();
+
+}
+
 void el32_cmp::run() {
     assert(fs::is_directory(_cfg.el32_path1));
     assert(fs::is_directory(_cfg.el32_path2));
