@@ -16,4 +16,7 @@ public:
 
 private:
     config_t _cfg;
+    uint8_t* _in_buf1;
+    uint8_t* _in_buf2;
+    std::ifstream _ifs1, _ifs2;
 };
