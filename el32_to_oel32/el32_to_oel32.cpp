@@ -81,6 +81,11 @@ uint64_t el32_to_oel32::get_total_edge() {
     return _total_edge;
 }
 
+void el32_to_oel32::_insert_edge(gstream::grid_format::gbid_t const& gbid, uint32_t const& src_v, uint32_t const& dest_v) {
+    _total_edge++;
+    _el_ofs[gbid.col].write_stream(src_v, dest_v);
+}
+
 uint64_t el32_to_oel32::_optimize(uint32_t* const& in_buf, uint64_t const& max_index, gstream::grid_format::gbid_t const& gbid, bool is_last_buf) {
     using namespace gstream;
     using namespace grid_format;
