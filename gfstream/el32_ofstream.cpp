@@ -37,3 +37,19 @@ void el32_ofstream::close_stream() {
         fs::remove(_output_path);
     _ofs.clear();
 }
+
+void el32_ofstream::init_buf(uint64_t const& output_buf_size) {
+    _output_buf_size = output_buf_size;
+    _out_buf = static_cast<uint32_t*>(malloc(_output_buf_size));
+}
+
+void el32_ofstream::_clear_buf() {
+    memset(_out_buf, 0, _output_buf_size);
+}
+
+void el32_ofstream::_flush_buf() {
+    _ofs.write(reinterpret_cast<char*>(_out_buf), _offset);
+    assert(!_ofs.bad() && "output stream I/O error.");
+    _offset = 0;
+    // clear_buf();
+}
