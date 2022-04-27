@@ -71,6 +71,14 @@ void el32_ifstream::convert_new_vertex(uint64_t const& max_index, uint64_t* cons
     }
 }
 
+void el32_ifstream::convert_little_endian(uint64_t const& max_index) {
+#pragma omp parallel for
+    for (uint64_t i = 0; i < (max_index >> 1); i++) {
+        boost::endian::endian_reverse_inplace(_in_buf[(i << 1)]);
+        boost::endian::endian_reverse_inplace(_in_buf[(i << 1) + 1]);
+    }
+}
+
 void el32_ifstream::memmove_in_buf(uint64_t const& dest, uint64_t const& src, uint64_t const& len) {
     memmove(_in_buf + dest, _in_buf + src, len);
 }
