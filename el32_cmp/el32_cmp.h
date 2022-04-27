@@ -20,6 +20,8 @@ private:
     uint8_t* _in_buf2;
     std::ifstream _ifs1, _ifs2;
 
+    std::vector<std::string> _get_sub_directory(std::string const& path);
+    std::vector<std::string> _get_sub_regular_file(std::string const& path);
     void read_stream1(uint64_t const& buffer_size);
     void read_stream2(uint64_t const& buffer_size);
     void _compare_file(std::string const& path1, std::string const& path2);

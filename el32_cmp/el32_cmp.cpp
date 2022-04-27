@@ -14,6 +14,26 @@ el32_cmp::el32_cmp(config_t const& cfg) {
 
 el32_cmp::~el32_cmp() {}
 
+std::vector<std::string> el32_cmp::_get_sub_directory(std::string const& path) {    
+    std::vector<std::string> sub_dir;
+    for(auto& file: boost::make_iterator_range(fs::directory_iterator(path), {})) {
+        if (fs::is_directory(file.path()))
+            sub_dir.push_back(file.path().string());
+    }
+    sort(sub_dir.begin(), sub_dir.end());
+    return sub_dir;
+}
+
+std::vector<std::string> el32_cmp::_get_sub_regular_file(std::string const& path) {    
+    std::vector<std::string> sub_file;
+    for(auto& file: boost::make_iterator_range(fs::directory_iterator(path), {})) {
+        if (fs::is_regular_file(file.path()))
+            sub_file.push_back(file.path().string());
+    }
+    sort(sub_file.begin(), sub_file.end());
+    return sub_file;
+}
+
 void el32_cmp::read_stream1(uint64_t const& buffer_size) {
     _ifs1.read(reinterpret_cast<char*>(_in_buf1), buffer_size);
     uint64_t const bytes_transferred = _ifs1.gcount();
