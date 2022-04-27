@@ -64,7 +64,7 @@ std::string el32_make_optimal_path(std::string const& path, uint32_t const& row_
 
 std::string el32_make_subdir_path(std::string const& path, uint32_t const& row_grid_ID) {
     namespace fs = ::boost::filesystem;
-    boost::format fmt(EL32_SUBDIR_FORMAT);
+    boost::format fmt(EL32_SUBDIR_FORMAT + "/" + EL32_OPTIMAL_FILE_FORMAT);
     fmt % row_grid_ID;
     fs::path subdir_name(fmt.str());
     fs::path fs_subdir_path = path / subdir_name;
@@ -72,7 +72,7 @@ std::string el32_make_subdir_path(std::string const& path, uint32_t const& row_g
 }
 
 std::string adj_make_path(std::string const& path, uint16_t const& file_number) {
-    boost::format fmt(ADJ_FORMAT);
+    boost::format fmt(ADJ_FORMAT + "/" + EL32_OPTIMAL_FILE_FORMAT);
     fmt % file_number;
     fs::path file_name(fmt.str());
     fs::path fs_file_path = path / file_name;
