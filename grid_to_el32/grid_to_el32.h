@@ -34,6 +34,9 @@ private:
     gstream::grid_format::grid_stream2 _gs;
     bool _open_grid_stream();
     
+    void _insert_edge(gstream::grid_format::gbid_t const& gbid, uint32_t const& src_v, uint32_t const& dest_v);
+    void _iterate_shard(gstream::grid_format::sleaf_t const& sleaf, gstream::grid_format::gbid_t const& gbid);
+    
     void _init_output_stream();
     void _close_output_stream();
 };
