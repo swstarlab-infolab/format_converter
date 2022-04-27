@@ -43,6 +43,7 @@ private:
     void _progress_shard(gstream::grid_format::gbid_t const& gbid);
     void _insert_progress_shard(shard_info& c_shard_info);
     void _remove_progress_shard(std::set<grid_to_oel32::shard_info, grid_to_oel32::shard_info_col_cmp>::iterator const& iter);
+    void _insert_edge(gstream::grid_format::gbid_t const& gbid, uint32_t const& src_v, uint32_t const& dest_v);
     void _clear();
     
     void _init_output_stream();

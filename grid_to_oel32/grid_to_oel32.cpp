@@ -168,6 +168,11 @@ void grid_to_oel32::_remove_progress_shard(std::set<grid_to_oel32::shard_info, g
     _inprocess_shard.erase(iter);
 }
 
+void grid_to_oel32::_insert_edge(gstream::grid_format::gbid_t const& gbid, uint32_t const& src_v, uint32_t const& dest_v) {
+    _total_edge++;
+    _el_ofs[gbid.col].write_stream(src_v, dest_v);
+}
+
 void grid_to_oel32::_clear() {
     _candidate_shard.clear();
     _inprocess_shard.clear();
