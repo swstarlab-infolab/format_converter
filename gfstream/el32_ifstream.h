@@ -17,6 +17,8 @@ public:
     uint32_t* get_in_buf();
     uint64_t* get_convert_in_buf();
 
+    void memmove_in_buf(uint64_t const& dest, uint64_t const& src, uint64_t const& len);
+
 private:
     std::ifstream _ifs;
     uint32_t* _in_buf;

@@ -48,3 +48,7 @@ uint32_t* el32_ifstream::get_in_buf() {
 uint64_t* el32_ifstream::get_convert_in_buf() {
     return _convert_in_buf;
 }
+
+void el32_ifstream::memmove_in_buf(uint64_t const& dest, uint64_t const& src, uint64_t const& len) {
+    memmove(_in_buf + dest, _in_buf + src, len);
+}
