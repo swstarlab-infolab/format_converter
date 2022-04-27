@@ -163,7 +163,7 @@ void grid_to_oel32::_insert_progress_shard(shard_info& s_info) {
 }
 
 void grid_to_oel32::_remove_progress_shard(std::set<grid_to_oel32::shard_info, grid_to_oel32::shard_info_col_cmp>::iterator const& iter) {
-    free((*iter).sparse_buf);
+    // free((*iter).sparse_buf);
     _src_vertex_idx.erase((*iter).sleaf.unique_id);
     _inprocess_shard.erase(iter);
 }
