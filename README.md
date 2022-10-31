@@ -1,9 +1,9 @@
-# grid-format-converter
+# Grid-format-converter
 
 Space-efficient graph data converter
 
 
-# about
+# About
 
 Developed by InfoLab @ KAIST, South Korea
 
