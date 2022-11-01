@@ -32,6 +32,7 @@ private:
     uint64_t _src_v, _adj_size;
 
     void _insert_edge(uint64_t const& dest_v);
+    void _convert_el32(uint64_t* const& convert_buf, uint64_t const& max_index);
 
     void _init_output_stream();
     void _close_output_stream();

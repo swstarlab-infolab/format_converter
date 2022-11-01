@@ -44,9 +44,9 @@ bool el32_converter::run() {
             uint64_t const buffer_size = std::min(_cfg.input_buf_size, remain_size);
             assert(buffer_size % 6 == 0);
 
-            // adj_is->clear_buf();
             adj_is->read_stream(buffer_size);
             adj_is->convert_little_endian(buffer_size);
+            _convert_el32(adj_is->get_convert_in_buf(), buffer_size / 6);
 
             remain_size -= buffer_size;
         }
@@ -67,6 +67,28 @@ void el32_converter::_insert_edge(uint64_t const& dest_v) {
     uint32_t col_grid_ID = static_cast<uint32_t>(dest_v >> GRID_SIZE);
     uint32_t col_v_ID = static_cast<uint32_t>(dest_v & GRID_MASK);
     _el_ofs[col_grid_ID].write_stream(_row_v_ID, col_v_ID);
+}
+
+void el32_converter::_convert_el32(uint64_t* const& convert_buf, uint64_t const& max_index) {
+    for (uint64_t i = 0; i < max_index; i++) {
+        if (_adj_size) {
+            _insert_edge(*(convert_buf + i)); 
+            if (!(--_adj_size)) _src_v = UINT64_INF;
+        }
+        else {
+            if (_src_v == UINT64_INF) {
+                _src_v = *(convert_buf + i);
+                uint32_t new_row_grid_ID = static_cast<uint32_t>(_src_v >> GRID_SIZE);
+                while (_row_grid_ID != new_row_grid_ID) {
+                    _close_output_stream();
+                    _row_grid_ID++;
+                    _init_output_stream();
+                }
+                _row_v_ID = static_cast<uint32_t>(_src_v & GRID_MASK);
+            }
+            else _adj_size = *(convert_buf + i);
+        }
+    }
 }
 
 void el32_converter::_init_output_stream() {
