@@ -4,6 +4,7 @@
 #include <gfstream/constant.h>
 #include <vector>
 #include <string>
+// #include <unordered_map>
 
 class el32_isolated {
 public:
@@ -37,9 +38,12 @@ private:
     uint64_t _global_remain_size;
     bool* _is_not_isolated_vertex;
     uint64_t* _new_ID_array;
+    // std::vector<std::unordered_map<uint32_t, uint64_t>* > new_ID_map_v;
 
     void _process(el32_ifstream* const& el32_is, ProcessType const& type);
     void _insert_edge(uint64_t const& src_v, uint64_t const& dest_v, bool const& el_ofs_ID);
+    void _get_isolated(uint64_t* const& convert_buf, uint64_t const& max_index);
+    void _reordering(uint64_t const& num_vertex);
 
     void _init_output_stream();
     void _init_output_stream(uint32_t const& _el_ofs_ID, uint32_t const& _row_grid_ID);
