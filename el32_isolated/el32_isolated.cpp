@@ -42,7 +42,8 @@ bool el32_isolated::run() {
     _new_ID_array = static_cast<uint64_t*>(malloc(num_vertex * 8));
     memset(_new_ID_array, 0, num_vertex * 8);
     
-    _process(el32_is, CONVERT_EL32);
+    _process(el32_is, GET_ISOLATED);
+    _reordering(num_vertex);
 
     delete el32_is;
     _close_output_stream();
@@ -70,7 +71,13 @@ void el32_isolated::_process(el32_ifstream* const& el32_is, ProcessType const& t
                 uint64_t const buffer_size = std::min(_cfg.input_buf_size, remain_size);
                 assert(buffer_size % 8 == 0);
 
-                el32_is->read_stream(buffer_size);                    
+                el32_is->read_stream(buffer_size);
+
+                if (type == GET_ISOLATED) {
+                    el32_is->convert_origin_vertex(buffer_size / 4, r, c);
+                    _get_isolated(el32_is->get_convert_in_buf(), buffer_size / 4);
+                }
+                    
                 remain_size -= buffer_size;
             }
             el32_is->close_stream();
@@ -84,6 +91,32 @@ void el32_isolated::_insert_edge(uint64_t const& src_v, uint64_t const& dest_v, 
     uint32_t col_grid_ID = static_cast<uint32_t>(dest_v >> GRID_SIZE);
     uint32_t col_v_ID = static_cast<uint32_t>(dest_v & GRID_MASK);
     _el_ofs[el_ofs_ID][col_grid_ID].write_stream(row_v_ID, col_v_ID);
+}
+
+void el32_isolated::_get_isolated(uint64_t* const& convert_buf, uint64_t const& max_index) {
+#pragma omp parallel for
+    for (uint64_t i = 0; i < max_index; i++) {
+        _is_not_isolated_vertex[*(convert_buf + i)] = true;
+    }
+}
+
+void el32_isolated::_reordering(uint64_t const& num_vertex) {
+    // new_ID_map_v.resize(col);
+    // for (uint32_t i = 0; i < col; i++) {
+    //     new_ID_map_v[i] = new std::unordered_map<uint32_t, uint64_t>();
+    // }
+
+    uint64_t new_ID = 1;
+    for(uint64_t i = 0; i < num_vertex; i++) {
+        if (_is_not_isolated_vertex[i]) {
+            _new_ID_array[i] = new_ID++;
+            // uint32_t grid_ID = static_cast<uint32_t>(i >> GRID_SIZE);
+            // uint32_t v_ID = static_cast<uint32_t>(i & mask);
+            // (*new_ID_map_v[grid_ID])[v_ID] = new_ID++;
+        }           
+    }
+
+    free(_is_not_isolated_vertex);
 }
 
 void el32_isolated::_init_output_stream() {
