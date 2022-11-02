@@ -45,6 +45,8 @@ bool el32_isolated::run() {
     _process(el32_is, GET_ISOLATED);
     _reordering(num_vertex);
 
+    _process(el32_is, CONVERT_EL32);
+
     delete el32_is;
     _close_output_stream();
     el32_remove_empty_output_directory(_output_path, _row);
@@ -56,6 +58,10 @@ uint64_t el32_isolated::get_total_edge() {
 }
 
 void el32_isolated::_process(el32_ifstream* const& el32_is, ProcessType const& type) {
+    if (type == CONVERT_EL32) {
+        _clear();
+        _init_output_stream();
+    }
     for (uint32_t r = 0; r < _row; r++) {
         _global_row_grid_ID = _row_grid_ID;
         for (uint32_t c = 0; c < _col; c++) {
@@ -77,10 +83,22 @@ void el32_isolated::_process(el32_ifstream* const& el32_is, ProcessType const& t
                     el32_is->convert_origin_vertex(buffer_size / 4, r, c);
                     _get_isolated(el32_is->get_convert_in_buf(), buffer_size / 4);
                 }
+                if (type == CONVERT_EL32) {
+                    el32_is->convert_new_vertex(buffer_size / 4, _new_ID_array, r, c);
+                    _convert_el32_isolated(el32_is->get_convert_in_buf(), buffer_size / 4);
+                }
                     
                 remain_size -= buffer_size;
             }
             el32_is->close_stream();
+        }
+        if (type == CONVERT_EL32) {
+            if (_row_grid_ID != _global_row_grid_ID) {
+                _close_output_stream(_el_ofs_ID);
+                _global_row_grid_ID = _row_grid_ID;
+                _init_output_stream(_el_ofs_ID, _global_row_grid_ID + 1);
+                _el_ofs_ID = !_el_ofs_ID;
+            }
         }
     }
 }
@@ -91,6 +109,21 @@ void el32_isolated::_insert_edge(uint64_t const& src_v, uint64_t const& dest_v, 
     uint32_t col_grid_ID = static_cast<uint32_t>(dest_v >> GRID_SIZE);
     uint32_t col_v_ID = static_cast<uint32_t>(dest_v & GRID_MASK);
     _el_ofs[el_ofs_ID][col_grid_ID].write_stream(row_v_ID, col_v_ID);
+}
+
+void el32_isolated::_convert_el32_isolated(uint64_t* const& convert_buf, uint64_t const& max_index) {
+    for (uint64_t i = 0; i < (max_index >> 1); i++) {
+        uint64_t src_v = *(convert_buf + (i << 1));
+        uint64_t dest_v = *(convert_buf + (i << 1) + 1);
+
+        uint32_t new_row_grid_ID = static_cast<uint32_t>(src_v >> GRID_SIZE);
+        if (_global_row_grid_ID != new_row_grid_ID) {
+            _row_grid_ID = new_row_grid_ID;
+            _insert_edge(src_v, dest_v, (_el_ofs_ID + 1) % 2);
+        }
+        else 
+            _insert_edge(src_v, dest_v, _el_ofs_ID);
+    }
 }
 
 void el32_isolated::_get_isolated(uint64_t* const& convert_buf, uint64_t const& max_index) {

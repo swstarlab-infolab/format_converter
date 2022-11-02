@@ -42,6 +42,7 @@ private:
 
     void _process(el32_ifstream* const& el32_is, ProcessType const& type);
     void _insert_edge(uint64_t const& src_v, uint64_t const& dest_v, bool const& el_ofs_ID);
+    void _convert_el32_isolated(uint64_t* const& convert_buf, uint64_t const& max_index);
     void _get_isolated(uint64_t* const& convert_buf, uint64_t const& max_index);
     void _reordering(uint64_t const& num_vertex);
 
